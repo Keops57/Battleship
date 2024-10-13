@@ -1,3 +1,3 @@
 import graph as gr
 
-gr.turtle.mainloop()
+gr.juego.jugar()
