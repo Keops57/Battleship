@@ -74,10 +74,12 @@ class Tablero:
                     coord.hit = True
                     if coord.barco:  # Si hay un barco en la casilla
                         print("Rojo")
+                        self.modificar(coord.coord, True)  # Actualiza el estado en el CSV
+                        return True
                     else:
                         print("Blanco")
-                    self.modificar(coord.coord, True)  # Actualiza el estado en el CSV
-                    return coord
+                        self.modificar(coord.coord, True)  # Actualiza el estado en el CSV
+                        return False
                 else:
                     print("Ya se disparó a esta coordenada, elija otra.")
                     return None

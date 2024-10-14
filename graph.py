@@ -3,6 +3,7 @@ from tkinter import *
 import tkinter as tk
 import re
 import database as db
+from tkinter import messagebox as MessageBox
 
 window = turtle.Screen()
 window.title("Battleship")
@@ -100,7 +101,6 @@ class Tortuga(turtle.Turtle):
         turtle.penup()  # Levanta el lápiz para mover sin dibujar
         turtle.goto(self.x, self.y)  # Mueve la tortuga a la posición especificada
         turtle.pendown()  # Baja el lápiz para empezar a dibujar
-        turtle.color("white")
         turtle.begin_fill()  # Comienza el relleno
         for _ in range(4):  # Dibuja un cuadrado
             turtle.forward(tam)
@@ -152,9 +152,19 @@ class Juego:
             if eleccion == "y":
                 coordenada = turtle.textinput("Colocar", "Ingrese una coordenada (A-J 1-10):")
                 if coordenada.lower() and re.match(r"^[a-jA-J](10|[1-9])$", coordenada):
-                    self.grid.mover_a_casilla(coordenada)
-                    self.grid.dibujar_cuadrado(25)
-                    tablero.disparar(coordenada)
+                    bomba = tablero.disparar(coordenada)
+                    if bomba == True:
+                        turtle.color("Red")
+                        self.grid.mover_a_casilla(coordenada)
+                        self.grid.dibujar_cuadrado(25)
+                    elif bomba == False:
+                        turtle.color("White")
+                        self.grid.mover_a_casilla(coordenada)
+                        self.grid.dibujar_cuadrado(25)
+                    elif bomba == None:
+                        MessageBox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
+                    
+
                 else:
                     print("Coordenada inválida.")
             elif eleccion == "n":
