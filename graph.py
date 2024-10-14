@@ -2,6 +2,7 @@ import turtle
 from tkinter import *
 import tkinter as tk
 import re
+import database as db
 
 window = turtle.Screen()
 window.title("Battleship")
@@ -127,13 +128,12 @@ class Ventana(tk.Toplevel, CenterWidgetMixin):
         boton_no.grid(row=1, column=1, padx=10, pady=5)
 
     def elegir_si(self):
-        self.resultado = "y"
+        self.resultado = "y" 
         self.destroy()
 
     def elegir_no(self):
         self.resultado = "n"
         self.destroy()
-
 
 class Juego:
     def __init__(self):
@@ -143,6 +143,7 @@ class Juego:
         self.root.withdraw()  # Oculta la ventana principal
 
     def jugar(self):
+        tablero = db.tablero
         while True:
             ventana = Ventana(self.root)
             ventana.wait_window()  # Espera a que el usuario elija una opción
@@ -150,9 +151,10 @@ class Juego:
             eleccion = ventana.resultado
             if eleccion == "y":
                 coordenada = turtle.textinput("Colocar", "Ingrese una coordenada (A-J 1-10):")
-                if coordenada and re.match(r"^[a-jA-J](10|[1-9])$", coordenada):
+                if coordenada.lower() and re.match(r"^[a-jA-J](10|[1-9])$", coordenada):
                     self.grid.mover_a_casilla(coordenada)
                     self.grid.dibujar_cuadrado(25)
+                    tablero.disparar(coordenada)
                 else:
                     print("Coordenada inválida.")
             elif eleccion == "n":
