@@ -107,25 +107,32 @@ class Tortuga(turtle.Turtle):
             turtle.right(90)
         turtle.end_fill()  # Termina el relleno
 
-class Ventana(tk.Toplevel, CenterWidgetMixin):
-    def __init__(self, parent):
+class V_de_Opcion(tk.Toplevel, CenterWidgetMixin):
+    def __init__(self, parent,title,text):
         super().__init__(parent)
         self.resultado = None
-        self.geometry("150x100")  # Define un tamaño fijo de 150x100 píxeles
+        self.title(title)
+        self.text = text
+        self.geometry("300x100")  # Define un tamaño fijo de 150x100 píxeles
         self.resizable(False, False)  # Evita que la ventana sea redimensionada
         self.build()
         self.center()
+        
 
     def build(self):
-        self.title("Disparo")
-        label = tk.Label(self, text="¿Desea disparar?")
-        label.grid(row=0, columnspan=2, padx=30, pady=5)
+        label = tk.Label(self, text=self.text)
+        label.grid(row=0, columnspan=2, padx=30, pady=5,sticky='nsew')  # `sticky='nsew'` para expandir en las cuatro direcciones
 
         boton_si = tk.Button(self, text="Sí", command=self.elegir_si)
-        boton_si.grid(row=1, column=0, padx=10, pady=5)
+        boton_si.grid(row=1, column=0, padx=10, pady=5,sticky='ew')  # `sticky='ew'` para expandir horizontalmente
 
         boton_no = tk.Button(self, text="No", command=self.elegir_no)
-        boton_no.grid(row=1, column=1, padx=10, pady=5)
+        boton_no.grid(row=1, column=1, padx=10, pady=5,sticky='ew')
+
+        # Configurar el peso de las columnas para que ocupen el espacio equitativamente
+        self.grid_columnconfigure(0, weight=1)  # Primera columna
+        self.grid_columnconfigure(1, weight=1)  # Segunda columna
+        self.grid_rowconfigure(0, weight=1)     # Primera fila (para centrar el label)
 
     def elegir_si(self):
         self.resultado = "y" 
@@ -144,14 +151,27 @@ class Juego:
 
     def jugar(self):
         tablero = db.tablero
+
+        ventana = V_de_Opcion(self.root,"Reinicio","¿Desea reiniciar el tablero?")
+        ventana.wait_window()
+
+        eleccion = ventana.resultado
+        if eleccion == "y":
+            tablero.reset()
+        elif eleccion == "n":
+            pass
+        
+
         while True:
-            ventana = Ventana(self.root)
+            ventana = V_de_Opcion(self.root,"Disparo","¿Desea disparar?")
             ventana.wait_window()  # Espera a que el usuario elija una opción
 
             eleccion = ventana.resultado
             if eleccion == "y":
                 coordenada = turtle.textinput("Colocar", "Ingrese una coordenada (A-J 1-10):")
-                if coordenada.lower() and re.match(r"^[a-jA-J](10|[1-9])$", coordenada):
+                if coordenada == None:
+                        MessageBox.showwarning("Error", "No se ingreso valor")
+                elif coordenada.lower() and re.match(r"^[a-jA-J](10|[1-9])$", coordenada):
                     bomba = tablero.disparar(coordenada)
                     if bomba == True:
                         turtle.color("Red")
@@ -163,6 +183,7 @@ class Juego:
                         self.grid.dibujar_cuadrado(25)
                     elif bomba == None:
                         MessageBox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
+                
                     
 
                 else:

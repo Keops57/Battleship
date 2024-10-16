@@ -88,6 +88,7 @@ class Tablero:
     def reset(self):
         for casilla in self.casillas:
             casilla.hit = False
+            casilla.barco = False
         print("El tablero ha sido reiniciado.")
 
 # Inicializar el tablero
