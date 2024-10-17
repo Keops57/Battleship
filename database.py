@@ -19,6 +19,14 @@ class Tablero:
         self.archivo = "tablero.csv"
         self.crear_tablero()  # Crear el tablero al inicializar
 
+    def crear_csv(self):
+        """Guarda el tablero en un archivo CSV."""
+        with open(self.archivo, mode='w', newline='\n', encoding='utf-8') as fichero:
+            writer = csv.writer(fichero, delimiter=';')
+            writer.writerow(['coord', 'barco', 'hit'])  # Cabecera del CSV
+            for casilla in self.casillas:
+                writer.writerow([casilla.coord, casilla.barco, casilla.hit])
+
     def cargar_csv(self):
         """Cargar el tablero desde un archivo CSV."""
         with open(self.archivo, mode='r', encoding='utf-8') as fichero:
@@ -43,14 +51,6 @@ class Tablero:
                     coord = f"{letra}{numero}"
                     self.casillas.append(Casilla(coord))
             self.crear_csv()  # Guardar el tablero en un CSV
-
-    def crear_csv(self):
-        """Guarda el tablero en un archivo CSV."""
-        with open(self.archivo, mode='w', newline='\n', encoding='utf-8') as fichero:
-            writer = csv.writer(fichero, delimiter=';')
-            writer.writerow(['coord', 'barco', 'hit'])  # Cabecera del CSV
-            for casilla in self.casillas:
-                writer.writerow([casilla.coord, casilla.barco, casilla.hit])
 
     def modificar(self, coord, hit):
         for casilla in self.casillas:

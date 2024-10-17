@@ -1,8 +1,8 @@
 coord;barco;hit
-a1;True;True
-a2;False;True
+a1;False;True
+a2;False;False
 a3;False;False
-a4;False;True
+a4;False;False
 a5;False;False
 a6;False;False
 a7;False;False
