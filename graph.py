@@ -110,8 +110,6 @@ class Tortuga(turtle.Turtle):
             turtle.right(90)
         turtle.end_fill()  # Termina el relleno
 
-
-
 class Juego:
     def __init__(self):
         self.grid = Tortuga()
@@ -127,22 +125,27 @@ class Juego:
 
         eleccion = ventana.resultado
         if eleccion == "y":
-            tablero.reset()
+            r = tablero.reset()
+            if r == None:
+                key = False
+            else:
+                key = True
+
             
         elif eleccion == "n":
             pass
         
-
-        while True:
+        
+        while key:
             ventana = hp.V_de_Opcion(self.root,"Disparo","¿Desea disparar?")
             ventana.wait_window()  # Espera a que el usuario elija una opción
 
             eleccion = ventana.resultado
             if eleccion == "y":
-                coordenada = turtle.textinput("Colocar", "Ingrese una coordenada (A-J 1-10):")
+                coordenada = turtle.textinput("Disparar", "Ingrese una coordenada (A-J 1-10):")
                 if coordenada == None:
                         MessageBox.showwarning("Error", "No se ingreso valor")
-                elif coordenada.lower() and re.match(r"^[a-jA-J](10|[1-9])$", coordenada):
+                elif coordenada.lower() and re.match(hp.patron, coordenada):
                     bomba = tablero.disparar(coordenada)
                     if bomba == True:
                         turtle.color("Red")

@@ -48,3 +48,5 @@ class V_de_Opcion(tk.Toplevel, CenterWidgetMixin):
     def elegir_no(self):
         self.resultado = "n"
         self.destroy()
+
+patron = r"^[a-jA-J](10|[1-9])$"

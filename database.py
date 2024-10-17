@@ -1,5 +1,10 @@
 import csv
+import turtle
 import os
+import helpers as hp
+import tkinter as tk
+from tkinter import messagebox as MessageBox
+import re
 
 class Casilla:
     def __init__(self, coord):
@@ -18,6 +23,8 @@ class Tablero:
         self.casillas = []
         self.archivo = "tablero.csv"
         self.crear_tablero()  # Crear el tablero al inicializar
+        self.root = tk.Tk()
+        self.root.withdraw()  # Oculta la ventana principal
 
     def crear_csv(self):
         """Guarda el tablero en un archivo CSV."""
@@ -56,40 +63,72 @@ class Tablero:
         for casilla in self.casillas:
             if casilla.coord == coord:
                 casilla.hit = hit  # Cambiar solo el estado de hit
-                self.guardar()  # Guarda el estado del tablero después de la modificación
-                return casilla
+                break
+        self.guardar() 
 
     def guardar(self):
         """Guarda el tablero en un archivo CSV."""
         with open(self.archivo, mode='w', newline='\n', encoding='utf-8') as fichero:
             writer = csv.writer(fichero, delimiter=';')
-            writer.writerow(['coord', 'barco', 'hit'])  # Cabecera del CSV
+            writer.writerow(['coord', 'barco', 'hit'])  # Cabecera
             for casilla in self.casillas:
-                writer.writerow([casilla.coord, casilla.barco, casilla.hit])  # Escribe cada casilla
+                writer.writerow([casilla.coord, casilla.barco, casilla.hit])
+        print("Tablero guardado correctamente.")
 
     def disparar(self, casilla):
         for coord in self.casillas:
             if coord.coord == casilla:
                 if not coord.hit:  # Verifica si no se ha disparado
                     coord.hit = True
+                    self.modificar(coord.coord, coord.hit) # Actualiza el estado en el CSV
+                    
                     if coord.barco:  # Si hay un barco en la casilla
                         print("Rojo")
-                        self.modificar(coord.coord, True)  # Actualiza el estado en el CSV
                         return True
                     else:
                         print("Blanco")
-                        self.modificar(coord.coord, True)  # Actualiza el estado en el CSV
                         return False
                 else:
                     print("Ya se disparó a esta coordenada, elija otra.")
                     return None
         return None
 
-    def reset(self):
+    def reset(self): 
+        """Este metodo reinicia el tablero (en el csv), colocando todas las casillas sin barco ni disparo previo"""
         for casilla in self.casillas:
             casilla.hit = False
             casilla.barco = False
         print("El tablero ha sido reiniciado.")
+        self.guardar()
+        ventana = hp.V_de_Opcion(self.root,"Nuevo Juego","¿Desea Volver a Jugar?")
+        ventana.wait_window()
+
+        eleccion = ventana.resultado
+
+        if eleccion == "y":
+            nb = 0
+            while(nb<17):
+                key = True
+                while key:
+                    c_elegida = turtle.textinput("Colocar", "Ingrese una coordenada (A-J 1-10):")
+                    if c_elegida == None:
+                        MessageBox.showwarning("Error", "No se ingreso valor")
+                    elif c_elegida.lower() and re.match(hp.patron, c_elegida):
+                        print(f"{c_elegida}  {nb}")
+                        for casilla in self.casillas:
+                            print(f"{c_elegida} = {casilla.coord}?")
+                            if c_elegida == casilla.coord:
+                                print("Eo")
+                                casilla.barco = True
+                                print(casilla)
+                                break
+                        key = False
+                nb+=1
+            self.guardar()
+
+        else:
+            return None
+
 
 # Inicializar el tablero
 tablero = Tablero()
