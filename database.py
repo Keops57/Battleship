@@ -4,6 +4,7 @@ import os
 import helpers as hp
 import tkinter as tk
 from tkinter import messagebox as MessageBox
+from tkinter import simpledialog as SimpleDialog
 import re
 
 class Casilla:
@@ -19,9 +20,9 @@ class Casilla:
         return {'coord': self.coord, 'barco': self.barco, 'hit': self.hit}
 
 class Tablero:     
-    def __init__(self):
+    def __init__(self,nombre):
         self.casillas = []
-        self.archivo = "tablero.csv"
+        self.archivo = f"{nombre}.csv"
         self.crear_tablero()  # Crear el tablero al inicializar
         self.root = tk.Tk()
         self.root.withdraw()  # Oculta la ventana principal
@@ -110,7 +111,7 @@ class Tablero:
             while(nb<17):
                 key = True
                 while key:
-                    c_elegida = turtle.textinput("Colocar", "Ingrese una coordenada (A-J 1-10):")
+                    c_elegida = SimpleDialog.askstring("Colocar", f"Ingrese una coordenada para el barco {nb+1} (A-J 1-10):")
                     if c_elegida == None:
                         MessageBox.showwarning("Error", "No se ingreso valor")
                     elif c_elegida.lower() and re.match(hp.patron, c_elegida):
@@ -131,4 +132,5 @@ class Tablero:
 
 
 # Inicializar el tablero
-tablero = Tablero()
+tablero1 = Tablero("tablero_enemigo")
+tablero2 = Tablero("tablero_aliado")
