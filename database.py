@@ -126,11 +126,12 @@ class Tablero:
                         key = False
                 nb+=1
             self.guardar()
+            return True
 
         else:
             return None
 
 
 # Inicializar el tablero
-tablero1 = Tablero("tablero_enemigo")
-tablero2 = Tablero("tablero_aliado")
+tablero1 = Tablero("tablero_aliado")
+tablero2 = Tablero("tablero_enemigo")
