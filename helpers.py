@@ -3,6 +3,7 @@ import tkinter as tk
 import re
 from tkinter import messagebox as MessageBox
 import turtle
+from tkinter import simpledialog as SimpleDialog
 
 class CenterWidgetMixin:
     def center(self):
@@ -32,7 +33,7 @@ class TurtleWindow:
         # Crear una tortuga asociada a esta pantalla
         self.turtle = turtle.RawTurtle(self.screen)
         self.turtle.pensize(3)
-        self.turtle.speed(100)
+        self.turtle.speed(300)
 
         # Posicionar del cursor en la esquina sup izq
         self.x = -250
@@ -147,5 +148,43 @@ class V_de_Opcion(tk.Toplevel, CenterWidgetMixin):
     def elegir_no(self):
         self.resultado = "n"
         self.destroy()
+
+
+
+def disparar(juego,tablero,turn,player,b):
+    coordenada = SimpleDialog.askstring(f"Disparar J{player}", "Ingrese una coordenada (A-J 1-10):")
+    if coordenada == None:
+        MessageBox.showwarning("Error", "No se ingreso valor")
+        return turn,b
+    elif coordenada.lower() and re.match(patron, coordenada):
+        bomba = tablero.disparar(coordenada)
+        if bomba == True:
+            juego.turtle.color("Red")
+            juego.mover_a_casilla(coordenada)
+            juego.dibujar_cuadrado(25)
+            if b == 1:
+                MessageBox.showinfo("GG!", f"Felicidades P{player}, haz destruido todos los barcos del enemigo")
+            else:
+                MessageBox.showinfo("HIT!", "Haz dado en el blanco! Dispara de nuevo")
+            return turn,b-1
+        elif bomba == False:
+            juego.turtle.color("White")
+            juego.mover_a_casilla(coordenada)
+            juego.dibujar_cuadrado(25)
+            if player == 1:
+                return turn+1,b
+            
+            elif player == 2:
+                return turn-1,b
+        
+        elif bomba == None:
+            MessageBox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
+            return turn,b
+
+    else:
+        MessageBox.showwarning("Error", "Cordenada Invalida")
+        print("Coordenada inválida.")
+        return turn,b
+
 
 patron = r"^[a-jA-J](10|[1-9])$"
