@@ -1,5 +1,4 @@
 import csv
-import turtle
 import os
 import helpers as hp
 import tkinter as tk
@@ -18,8 +17,11 @@ class Casilla:
 
     def to_dict(self):
         return {'coord': self.coord, 'barco': self.barco, 'hit': self.hit}
+    
+    def hit_status(self):
+        return {'coord': self.coord, 'hit': self.hit}
 
-class Tablero:     
+class Tablero:
     def __init__(self,nombre):
         self.nombre = nombre
         self.casillas = []
@@ -27,6 +29,19 @@ class Tablero:
         self.crear_tablero()  # Crear el tablero al inicializar
         self.root = tk.Tk()
         self.root.withdraw()  # Oculta la ventana principal
+
+    def crear_tablero(self):
+        """Crea un tablero de tamaño 10x10."""
+        if os.path.exists(self.archivo):
+            print("El tablero ya ha sido creado. Cargando desde el archivo CSV...")
+            self.cargar_csv()
+        else:
+            letras = "abcdefghij"  # Letras para las filas
+            for letra in letras:
+                for numero in range(1, 11):
+                    coord = f"{letra}{numero}"
+                    self.casillas.append(Casilla(coord))
+            self.crear_csv()  # Guardar el tablero en un CSV
 
     def crear_csv(self):
         """Crea el tablero en un archivo CSV."""
@@ -47,19 +62,6 @@ class Tablero:
                 casilla.hit = row['hit'] == 'True'      # Convertir a booleano
                 self.casillas.append(casilla)
             print("Tablero cargado desde el archivo CSV.")
-
-    def crear_tablero(self):
-        """Crea un tablero de tamaño 10x10."""
-        if os.path.exists(self.archivo):
-            print("El tablero ya ha sido creado. Cargando desde el archivo CSV...")
-            self.cargar_csv()
-        else:
-            letras = "abcdefghij"  # Letras para las filas
-            for letra in letras:
-                for numero in range(1, 11):
-                    coord = f"{letra}{numero}"
-                    self.casillas.append(Casilla(coord))
-            self.crear_csv()  # Guardar el tablero en un CSV
 
     def modificar(self, coord, hit):
         """Permite actualizar los contenidos del csv"""
@@ -107,21 +109,38 @@ class Tablero:
     def colocar_barcos(self):
         nb = 0
         while(nb<17):
+
+            if nb<2:
+                barco = "Peñero"
+                tamaño = 2
+            elif nb<5:
+                barco = "Submarino"
+                tamaño = 3
+            elif nb<8:
+                barco = "3Casillas"
+                tamaño = 3
+            elif nb<12:
+                barco = "4Casillas"
+                tamaño = 4
+            else:
+                barco = "Battleship"
+                tamaño = 5
+
             key = True
             while key:
-                c_elegida = SimpleDialog.askstring(f"Colocar en {self.nombre}", f"Ingrese una coordenada para el barco {nb+1} (A-J 1-10):")
-                if c_elegida == None:
+                cinicial = SimpleDialog.askstring(f"Colocar en {self.nombre}", f"Ingrese una coordenada para el barco {barco} (A-J 1-10):")
+                if cinicial == None:
                     MessageBox.showwarning("Error", "No se ingreso valor")
-                elif c_elegida.lower() and re.match(hp.patron, c_elegida):
-                    print(f"{c_elegida}  {nb}")
+                elif cinicial.lower() and re.match(hp.patron, cinicial):
+                    print(f"{cinicial}  {nb}")
                     for casilla in self.casillas:
-                        print(f"{c_elegida} = {casilla.coord}?")
-                        if c_elegida == casilla.coord and casilla.barco == False:
+                        print(f"{cinicial} = {casilla.coord}?")
+                        if cinicial == casilla.coord and casilla.barco == False:
                             casilla.barco = True
                             print(casilla)
                             key = False
                             break
-                        elif c_elegida == casilla.coord and casilla.barco == True:
+                        elif cinicial == casilla.coord and casilla.barco == True:
                             MessageBox.showwarning("Error", "Casilla ya Ingresada")
                             break
                         

@@ -1,6 +1,5 @@
 from tkinter import *
 import tkinter as tk
-import re
 import database as db
 import helpers as hp
 from tkinter import messagebox as MessageBox
@@ -44,7 +43,7 @@ class Juego:
                 
 
             else:
-                pass
+                return
 
         for coord in tablero1.casillas:
             if coord.barco == True:
