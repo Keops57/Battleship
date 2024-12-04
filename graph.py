@@ -1,9 +1,6 @@
-from tkinter import *
 import tkinter as tk
 import database as db
 import helpers as hp
-from tkinter import messagebox as MessageBox
-from tkinter import simpledialog as SimpleDialog
 
 class Juego:
     def __init__(self):
@@ -29,8 +26,11 @@ class Juego:
             
         elif eleccion == "n":
             key = True
+
+        else:
+            key =True
         
-        if key == False:
+        if not key:
             ventana = hp.V_de_Opcion(self.root,"Nuevo Juego","¿Desea Jugar?")
             ventana.wait_window()
 
@@ -38,7 +38,9 @@ class Juego:
 
             if eleccion == "y":
                 tablero1.colocar_barcos()
+                print("Listo Tablero 1")
                 tablero2.colocar_barcos()
+                print("Listo Tablero 2")
                 key = True
                 
 
@@ -46,12 +48,12 @@ class Juego:
                 return
 
         for coord in tablero1.casillas:
-            if coord.barco == True:
+            if coord.barco:
                 self.grid1.turtle.color("Black")
                 self.grid1.mover_a_casilla(coord.coord)
                 self.grid1.dibujar_cuadrado(25)
         for coord in tablero2.casillas:
-            if coord.barco == True:
+            if coord.barco:
                 self.grid2.turtle.color("Black")
                 self.grid2.mover_a_casilla(coord.coord)
                 self.grid2.dibujar_cuadrado(25)
@@ -64,7 +66,9 @@ class Juego:
             if turn == 1:
                     turn,b1 = hp.disparar(self.grid2,tablero2,turn,1,b1)
             elif turn == 2:
-                    turn,b2 = hp.disparar(self.grid1,tablero1,turn,2,b2)         
+                    turn,b2 = hp.disparar(self.grid1,tablero1,turn,2,b2)
+            elif turn == 0:
+                pass
 
         self.root.destroy()  # Cierra la ventana principal de Tkinter
 

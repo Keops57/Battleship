@@ -1,10 +1,12 @@
 import tkinter as tk
-from tkinter import *
-from tkinter import messagebox as MessageBox
-from tkinter import simpledialog as SimpleDialog
+from tkinter import messagebox
+from tkinter import simpledialog
 import turtle
 import re
 
+patron = r"^[a-jA-J]([0-9])$"
+
+# noinspection PyUnresolvedReferences
 class CenterWidgetMixin:
     def center(self):
         self.update()
@@ -70,10 +72,9 @@ class TurtleWindow:
         # Eje X (columnas): Número -> -250 + (columna - 1) * 50
         self.x = -250 + (1 - 1) * 50
         run = True
-        patron = r"^[a-j](10|[1-9])$"
-        while(run):
+        while run:
 
-            orden = turtle.textinput("Donde quiere colocar los barcos", "Casillas de A-J 1-10")
+            orden = turtle.textinput("Donde quiere colocar los barcos", "Casillas de A-J 0-9")
             if orden:
 
                 if re.match(patron, orden, re.IGNORECASE):
@@ -84,7 +85,7 @@ class TurtleWindow:
                         run = False
                 
                 else:
-                    print("Valor invalido. ([a-j][1-10])")
+                    print("Valor invalido. ([a-j][0-9])")
 
     def mover_a_casilla(self, coordenada):
             """Traduce la coordenada (como 'A5') a coordenadas de Turtle y mueve la tortuga."""
@@ -94,7 +95,7 @@ class TurtleWindow:
             # Calcular las coordenadas en el lienzo de Turtle
 
             # Eje X (columnas): Número -> -250 + (columna - 1) * 50
-            self.x = -250 + (numero - 1) * 50
+            self.x = -200 + (numero - 1) * 50
             
             # Eje Y (filas): Letra -> -250 + (A=0, B=1, ..., J=9) * 50
             self.y = 250 - (ord(letra) - ord('A')) * 50
@@ -151,59 +152,122 @@ class V_de_Opcion(tk.Toplevel, CenterWidgetMixin):
         self.destroy()
 
 class V_de_Casillas(tk.Toplevel, CenterWidgetMixin):
-    def __init__(self, parent,title,text):
+    def __init__(self, parent, title, text,lim):
         super().__init__(parent)
         self.resultado = None
+        self.lim = lim
+        self.cI = ""
+        self.cF = ""
         self.title(title)
         self.text = text
-        self.geometry("300x100")  # Define un tamaño fijo de 150x100 píxeles
+        self.geometry("500x100")
+        self.casillas_a_marcar = []
         self.resizable(False, False)  # Evita que la ventana sea redimensionada
         self.build()
         self.center()
-        
 
     def build(self):
+        """Construye los widgets de la ventana."""
         label = tk.Label(self, text=self.text)
-        label.grid(row=0, columnspan=2, padx=30, pady=5,sticky='nsew')  # `sticky='nsew'` para expandir en las cuatro direcciones
+        label.grid(row=0, columnspan=2, padx=30, pady=5, sticky='nsew')
 
-        boton_si = tk.Button(self, text="Sí", command=self.elegir_si)
-        boton_si.grid(row=1, column=0, padx=10, pady=5,sticky='ew')  # `sticky='ew'` para expandir horizontalmente
+        self.cinicio = tk.Entry(self)
+        self.cinicio.grid(row=1, column=0, padx=10, pady=5, sticky='ew')
 
-        boton_no = tk.Button(self, text="No", command=self.elegir_no)
-        boton_no.grid(row=1, column=1, padx=10, pady=5,sticky='ew')
+        self.cfinal = tk.Entry(self)
+        self.cfinal.grid(row=1, column=1, padx=10, pady=5, sticky='ew')
 
-        # Configurar el peso de las columnas para que ocupen el espacio equitativamente
-        self.grid_columnconfigure(0, weight=1)  # Primera columna
-        self.grid_columnconfigure(1, weight=1)  # Segunda columna
-        self.grid_rowconfigure(0, weight=1)     # Primera fila (para centrar el label)
+        boton_confirmar = tk.Button(self, text="Confirmar", command=self.confirmar)
+        boton_confirmar.grid(row=2, columnspan=2, padx=10, pady=5, sticky='ew')
 
-    def elegir_si(self):
-        self.resultado = "y" 
-        self.destroy()
+        # Configuración de peso para expandir columnas
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-    def elegir_no(self):
-        self.resultado = "n"
-        self.destroy()
+    def confirmar(self):
+        """Valida las entradas y cierra la ventana."""
+        self.cI = self.cinicio.get().strip()
+        self.cF = self.cfinal.get().strip()
+
+        lista_numeros = [str(x) for x in range(0, 10)]
+        lista_letras = ["a","b","c","d","e","f","g","h","i","j"]
+
+        if not self.cI or not self.cF:
+            messagebox.showerror("Error", "Ambas coordenadas son obligatorias.")
+            return  # No cerrar la ventana si los campos están vacíos
+        
+        
+        if self.cI[0] == self.cF[0] and self.cI[1] in lista_numeros and self.cF[1] in lista_numeros:
+            valid = int(self.cF[1]) - int(self.cI[1]) 
+            print(valid)
+
+            if valid <=0:
+                messagebox.showerror("Error", "Posicionamiento invalido (Coloque las casillas de izq a der o de arriba a abajo)")
+                return  # No cerrar la ventana si los campos están vacíos
+            
+            elif valid == self.lim:
+                for i in range(int(self.cI[1]), int(self.cF[1]) + 1):
+                    self.casillas_a_marcar.append(f"{self.cI[0]}{i}")
+                print("Coordenadas Validas")
+                print(f"Coordenadas Actuales: {self.casillas_a_marcar}")
+            
+            else:
+                messagebox.showerror("Error", "Posicionamiento invalido")
+                return  # No cerrar la ventana si los campos están vacíos
+
+
+        elif self.cI[1] == self.cF[1] and self.cI[0] in lista_letras and self.cF[0] in lista_letras:
+
+            valid = ord(self.cF[0]) - ord(self.cI[0]) 
+            print(valid)
+
+            if valid <=0:
+                messagebox.showerror("Error", "Posicionamiento invalido (Coloque las casillas de izq a der o de arriba a abajo)")
+                return  # No cerrar la ventana si los campos están vacíos
+            
+            elif valid == self.lim:
+                for i in range(ord(self.cI[0]) , ord(self.cF[0]) + 1):
+                    self.casillas_a_marcar.append(f"{i}{self.cF[1]}")
+                print("Coordenadas Validas")
+                print(f"Coordenadas Actuales: {self.casillas_a_marcar}")
+
+            else:
+                messagebox.showerror("Error", "Posicionamiento invalido")
+                return  # No cerrar la ventana si los campos están vacíos
+            
+        else:
+            messagebox.showerror("Error", "Posicionamiento invalido")
+            return
+        
+
+        self.resultado = "y"  # Indica que se confirmó la entrada
+        self.destroy()  # Cierra la ventana
 
 
 def disparar(juego,tablero,turn,player,b):
-    coordenada = SimpleDialog.askstring(f"Disparar J{player}", "Ingrese una coordenada (A-J 1-10):")
-    if coordenada == None:
-        MessageBox.showwarning("Error", "No se ingreso valor")
+    coordenada = simpledialog.askstring(f"Disparar J{player}", "Ingrese una coordenada (A-J 0-9):")
+    if coordenada is None:
+        messagebox.showwarning("Error", "No se ingreso valor")
         return turn,b
     elif coordenada.lower() and re.match(patron, coordenada):
         #Envia el string de la coordenada a la funcion disparar del objeto de clase Tablero en el modulo database y devuelve un booleano
         bomba = tablero.disparar(coordenada) 
-        if bomba == True:
+        if bomba:
             juego.turtle.color("Red")
             juego.mover_a_casilla(coordenada)
             juego.dibujar_cuadrado(25)
             if b == 1:
-                MessageBox.showinfo("GG!", f"Felicidades P{player}, haz destruido todos los barcos del enemigo")
+                messagebox.showinfo("GG!", f"Felicidades P{player}, haz destruido todos los barcos del enemigo")
+                return 0,0
             else:
-                MessageBox.showinfo("HIT!", "Haz dado en el blanco! Dispara de nuevo")
+                messagebox.showinfo("HIT!", "Haz dado en el blanco! Dispara de nuevo")
             return turn,b-1
-        elif bomba == False:
+
+        elif bomba is None:
+            messagebox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
+            return turn,b
+
+        elif not bomba:
             juego.turtle.color("White")
             juego.mover_a_casilla(coordenada)
             juego.dibujar_cuadrado(25)
@@ -212,15 +276,10 @@ def disparar(juego,tablero,turn,player,b):
             
             elif player == 2:
                 return turn-1,b
-        
-        elif bomba == None:
-            MessageBox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
-            return turn,b
 
     else:
-        MessageBox.showwarning("Error", "Cordenada Invalida")
+        messagebox.showwarning("Error", "Coordenada Invalida")
         print("Coordenada inválida.")
         return turn,b
 
 
-patron = r"^[a-jA-J](10|[1-9])$"

@@ -111,7 +111,7 @@ class V_de_Casillas(tk.Toplevel, CenterWidgetMixin):
         self.destroy()  # Cierra la ventana
 
 
-def solicitar_coordenadas(tablero):
+def colocar_barcos(self):
     nb = 0
     while(nb<5):
         if nb==0:
@@ -167,7 +167,6 @@ root = tk.Tk()
 root.withdraw()
 
 if __name__ == "__main__":
-    gr
     solicitar_coordenadas(db.tablero1)
 
 #---------------------------------------------------------------------------

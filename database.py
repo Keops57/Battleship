@@ -2,9 +2,7 @@ import csv
 import os
 import helpers as hp
 import tkinter as tk
-from tkinter import messagebox as MessageBox
-from tkinter import simpledialog as SimpleDialog
-import re
+from tkinter import messagebox
 
 class Casilla:
     def __init__(self, coord):
@@ -21,6 +19,8 @@ class Casilla:
     def hit_status(self):
         return {'coord': self.coord, 'hit': self.hit}
 
+
+# noinspection SpellCheckingInspection
 class Tablero:
     def __init__(self,nombre):
         self.nombre = nombre
@@ -38,7 +38,7 @@ class Tablero:
         else:
             letras = "abcdefghij"  # Letras para las filas
             for letra in letras:
-                for numero in range(1, 11):
+                for numero in range(0, 10):
                     coord = f"{letra}{numero}"
                     self.casillas.append(Casilla(coord))
             self.crear_csv()  # Guardar el tablero en un CSV
@@ -98,8 +98,8 @@ class Tablero:
                     return None
         return None
 
-    def reset(self): 
-        """Este metodo reinicia el tablero (en el csv), colocando todas las casillas sin barco ni disparo previo"""
+    def reset(self):
+        """Este método reinicia el tablero (en el csv), colocando todas las casillas sin barco ni disparo previo"""
         for casilla in self.casillas:
             casilla.hit = False
             casilla.barco = False
@@ -108,44 +108,52 @@ class Tablero:
 
     def colocar_barcos(self):
         nb = 0
-        while(nb<17):
-
-            if nb<2:
+        while nb<5:
+            if nb==0:
                 barco = "Peñero"
-                tamaño = 2
-            elif nb<5:
+                size = 1
+            elif nb==1:
                 barco = "Submarino"
-                tamaño = 3
-            elif nb<8:
+                size = 2
+            elif nb==2:
                 barco = "3Casillas"
-                tamaño = 3
-            elif nb<12:
+                size = 2
+            elif nb==3:
                 barco = "4Casillas"
-                tamaño = 4
+                size = 3
             else:
                 barco = "Battleship"
-                tamaño = 5
+                size = 4
+            
+            """Función para solicitar las coordenadas usando la ventana secundaria."""
+            app = hp.V_de_Casillas(self.root, "BattleShip", f"Ingrese las Coord de Inicio y Final del {barco}",size)
+            app.grab_set()  # Bloquea la interacción con otras ventanas hasta que se cierre esta
+            self.root.wait_window(app)  # Espera a que se cierre la ventana
 
-            key = True
-            while key:
-                cinicial = SimpleDialog.askstring(f"Colocar en {self.nombre}", f"Ingrese una coordenada para el barco {barco} (A-J 1-10):")
-                if cinicial == None:
-                    MessageBox.showwarning("Error", "No se ingreso valor")
-                elif cinicial.lower() and re.match(hp.patron, cinicial):
-                    print(f"{cinicial}  {nb}")
-                    for casilla in self.casillas:
-                        print(f"{cinicial} = {casilla.coord}?")
-                        if cinicial == casilla.coord and casilla.barco == False:
-                            casilla.barco = True
-                            print(casilla)
-                            key = False
+            if app.resultado == "y":
+                valido = False
+                cont_casilla = 0
+                print(f"{app.cI} -> {app.cF}")
+                for casilla in self.casillas:
+                    if casilla.coord in app.casillas_a_marcar and not casilla.barco:
+                        casilla.barco = True
+                        cont_casilla += 1
+                        if cont_casilla == size+1:
+                            valido = True
                             break
-                        elif cinicial == casilla.coord and casilla.barco == True:
-                            MessageBox.showwarning("Error", "Casilla ya Ingresada")
-                            break
-                        
-            nb+=1
-        self.guardar()
+                    elif casilla.coord in app.casillas_a_marcar and casilla.barco:
+                        casilla_repetida = casilla.coord
+                        valido = False
+                        messagebox.showerror("Error", f"La casilla {casilla_repetida} ya tiene un barco encima, coloque de nuevo el barco: ")
+                        break
+
+                if valido:
+                    nb+=1
+                    self.guardar()
+    
+            else:
+                print("El usuario canceló la entrada.")
+                return
 
 # Inicializar el tablero
 tablero1 = Tablero("tablero_aliado")
