@@ -1,17 +1,19 @@
 import csv
 import os
+import config
 import helpers as hp
 import tkinter as tk
+import client as cl
 from tkinter import messagebox
 
 class Casilla:
-    def __init__(self, coord):
+    def __init__(self, coord,barco=False, hit=False):
         self.coord = coord
-        self.barco = False
-        self.hit = False
+        self.barco = barco
+        self.hit = hit
 
     def __str__(self):
-        return f"({self.coord}) {self.barco} {self.hit}"
+        return f"{self.coord} {self.barco} {self.hit}"
 
     def to_dict(self):
         return {'coord': self.coord, 'barco': self.barco, 'hit': self.hit}
@@ -22,9 +24,9 @@ class Casilla:
 
 # noinspection SpellCheckingInspection
 class Tablero:
+    casillas = []
     def __init__(self,nombre):
         self.nombre = nombre
-        self.casillas = []
         self.archivo = f"{nombre}.csv"
         self.crear_tablero()  # Crear el tablero al inicializar
         self.root = tk.Tk()
@@ -36,11 +38,14 @@ class Tablero:
             print("El tablero ya ha sido creado. Cargando desde el archivo CSV...")
             self.cargar_csv()
         else:
+            self.casillas = []
+
             letras = "abcdefghij"  # Letras para las filas
             for letra in letras:
                 for numero in range(0, 10):
                     coord = f"{letra}{numero}"
-                    self.casillas.append(Casilla(coord))
+                    casilla = Casilla(coord) 
+                    self.casillas.append(casilla)
             self.crear_csv()  # Guardar el tablero en un CSV
 
     def crear_csv(self):
@@ -53,15 +58,22 @@ class Tablero:
 
     def cargar_csv(self):
         """Cargar el tablero desde un archivo CSV."""
-        with open(self.archivo, mode='r', encoding='utf-8') as fichero:
-            reader = csv.DictReader(fichero, delimiter=';')
-            self.casillas = []
-            for row in reader:
-                casilla = Casilla(row['coord'])
-                casilla.barco = row['barco'] == 'True'  # Convertir a booleano
-                casilla.hit = row['hit'] == 'True'      # Convertir a booleano
-                self.casillas.append(casilla)
-            print("Tablero cargado desde el archivo CSV.")
+
+        casillas = []
+        with open(config.DATABASE_PATH,newline='\n') as fichero:
+            reader = csv.reader(fichero,delimiter=';')
+            next(reader, None)
+            for coord, barco, hit in reader:
+                casilla = Casilla(coord, barco == 'True', hit == 'True')
+                casillas.append(casilla)
+                # print(casilla)
+        self.casillas = casillas
+        print(f"Tablero {self.nombre} cargado desde el archivo CSV.")
+
+        # lista_dicts = [casilla.to_dict() for casilla in self.casillas]
+        # # Verificar el resultado
+        # for dic in lista_dicts:
+        #     print(dic)
 
     def modificar(self, coord, hit):
         """Permite actualizar los contenidos del csv"""
@@ -86,7 +98,6 @@ class Tablero:
                 if not coord.hit:  # Verifica si no se ha disparado
                     coord.hit = True
                     self.modificar(coord.coord, coord.hit) # Actualiza el estado en el CSV
-                    
                     if coord.barco:  # Si hay un barco en la casilla
                         print("Rojo")
                         return True
@@ -99,10 +110,11 @@ class Tablero:
         return None
 
     def reset(self):
-        """Este método reinicia el tablero (en el csv), colocando todas las casillas sin barco ni disparo previo"""
+        """Este metodo reinicia el tablero (en el csv), colocando todas las casillas sin barco ni disparo previo"""
         for casilla in self.casillas:
             casilla.hit = False
             casilla.barco = False
+        cl.resetearApi(self.nombre) 
         print("El tablero ha sido reiniciado.")
         self.guardar()
 
@@ -110,19 +122,19 @@ class Tablero:
         nb = 0
         while nb<5:
             if nb==0:
-                barco = "Peñero"
+                barco = "Destroyer (2)"
                 size = 1
             elif nb==1:
-                barco = "Submarino"
+                barco = "Submarine (3)"
                 size = 2
             elif nb==2:
-                barco = "3Casillas"
+                barco = "Cruiser (3)"
                 size = 2
             elif nb==3:
-                barco = "4Casillas"
+                barco = "Battleship (4)"
                 size = 3
             else:
-                barco = "Battleship"
+                barco = "Carrier (5)"
                 size = 4
             
             """Función para solicitar las coordenadas usando la ventana secundaria."""
@@ -137,6 +149,7 @@ class Tablero:
                 for casilla in self.casillas:
                     if casilla.coord in app.casillas_a_marcar and not casilla.barco:
                         casilla.barco = True
+                        cl.colocarBarcosApi(casilla.coord,self.nombre)
                         cont_casilla += 1
                         if cont_casilla == size+1:
                             valido = True
@@ -154,7 +167,53 @@ class Tablero:
             else:
                 print("El usuario canceló la entrada.")
                 return
+            
+    def colocar_barcos_aleatorio(self):
+        nb = 0
+        while nb<5:
+            if nb==0:
+                barco = "Destroyer (2)"
+                size = 1
+            elif nb==1:
+                barco = "Submarine (3)"
+                size = 2
+            elif nb==2:
+                barco = "Cruiser (3)"
+                size = 2
+            elif nb==3:
+                barco = "Battleship (4)"
+                size = 3
+            else:
+                barco = "Carrier (5)"
+                size = 4
+            
+            """Función para solicitar las coordenadas usando la ventana secundaria."""
+            app = hp.V_de_Casillas(self.root, "BattleShip", f"Ingrese las Coord de Inicio y Final del {barco}",size)
+            app.grab_set()  # Bloquea la interacción con otras ventanas hasta que se cierre esta
+            self.root.wait_window(app)  # Espera a que se cierre la ventana
 
-# Inicializar el tablero
-tablero1 = Tablero("tablero_aliado")
-tablero2 = Tablero("tablero_enemigo")
+            if app.resultado == "y":
+                valido = False
+                cont_casilla = 0
+                print(f"{app.cI} -> {app.cF}")
+                for casilla in self.casillas:
+                    if casilla.coord in app.casillas_a_marcar and not casilla.barco:
+                        casilla.barco = True
+                        cl.colocarBarcosApi(casilla.coord,self.nombre)
+                        cont_casilla += 1
+                        if cont_casilla == size+1:
+                            valido = True
+                            break
+                    elif casilla.coord in app.casillas_a_marcar and casilla.barco:
+                        casilla_repetida = casilla.coord
+                        valido = False
+                        messagebox.showerror("Error", f"La casilla {casilla_repetida} ya tiene un barco encima, coloque de nuevo el barco: ")
+                        break
+
+                if valido:
+                    nb+=1
+                    self.guardar()
+    
+            else:
+                print("El usuario canceló la entrada.")
+                return

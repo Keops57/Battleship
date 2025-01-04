@@ -1,6 +1,7 @@
 import tkinter as tk
 import database as db
 import helpers as hp
+import api as ap
 
 class Juego:
     def __init__(self):
@@ -12,8 +13,8 @@ class Juego:
         self.grid2.matriz(10)
 
     def jugar(self):
-        tablero1 = db.tablero1
-        tablero2 = db.tablero2
+        tablero1 = ap.tablero_aliado
+        tablero2 = ap.tablero_enemigo
 
         ventana = hp.V_de_Opcion(self.root,"Reinicio","¿Desea reiniciar el tablero?")
         ventana.wait_window()
@@ -39,7 +40,7 @@ class Juego:
             if eleccion == "y":
                 tablero1.colocar_barcos()
                 print("Listo Tablero 1")
-                tablero2.colocar_barcos()
+                tablero2.colocar_barcos_aleatorio()
                 print("Listo Tablero 2")
                 key = True
                 
@@ -52,6 +53,7 @@ class Juego:
                 self.grid1.turtle.color("Black")
                 self.grid1.mover_a_casilla(coord.coord)
                 self.grid1.dibujar_cuadrado(25)
+                
         for coord in tablero2.casillas:
             if coord.barco:
                 self.grid2.turtle.color("Black")
@@ -65,6 +67,7 @@ class Juego:
             print(f"{b1} {b2}")
             if turn == 1:
                     turn,b1 = hp.disparar(self.grid2,tablero2,turn,1,b1)
+                    
             elif turn == 2:
                     turn,b2 = hp.disparar(self.grid1,tablero1,turn,2,b2)
             elif turn == 0:

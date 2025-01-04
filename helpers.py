@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter import simpledialog
 import turtle
 import re
+import client as cl
 
 patron = r"^[a-jA-J]([0-9])$"
 
@@ -35,13 +36,14 @@ class TurtleWindow:
         # Crear una tortuga asociada a esta pantalla
         self.turtle = turtle.RawTurtle(self.screen)
         self.turtle.pensize(3)
-        self.turtle.speed(300)
+        self.turtle.speed(300) # 300
 
         # Posicionar del cursor en la esquina sup izq
         self.x = -250
         self.y = -250
 
     def matriz(self,n):
+        letras = ['A','B','C','D','E','F','G','H','I','J']
         i = 0
         self.x = -250
         self.y = -250
@@ -52,8 +54,11 @@ class TurtleWindow:
             self.turtle.pendown()
             self.turtle.setheading(270)
             self.turtle.forward(500)
+            self.x += 25
+            if i != 10:
+                self.canvas.create_text(self.x, -280, text=f"{i}", font=("Comic Sans ms", 24), fill="black")
             i += 1
-            self.x += 50
+            self.x += 25
         i = 0
         while i <= n:
             self.turtle.penup()
@@ -62,8 +67,11 @@ class TurtleWindow:
             self.turtle.pendown()
             self.turtle.setheading(0)
             self.turtle.forward(500)
+            self.y += 25
+            if i != 10:
+                self.canvas.create_text(-280, self.y, text=f"{letras[i]}", font=("Comic Sans ms", 24), fill="black")
             i += 1
-            self.y += 50
+            self.y += 25
 
     def colocar (self):
         # Eje Y (filas): Letra -> -250 + (A=0, B=1, ..., J=9) * 50
@@ -227,7 +235,7 @@ class V_de_Casillas(tk.Toplevel, CenterWidgetMixin):
             
             elif valid == self.lim:
                 for i in range(ord(self.cI[0]) , ord(self.cF[0]) + 1):
-                    self.casillas_a_marcar.append(f"{i}{self.cF[1]}")
+                    self.casillas_a_marcar.append(f"{chr(i)}{self.cF[1]}")
                 print("Coordenadas Validas")
                 print(f"Coordenadas Actuales: {self.casillas_a_marcar}")
 
@@ -251,7 +259,9 @@ def disparar(juego,tablero,turn,player,b):
         return turn,b
     elif coordenada.lower() and re.match(patron, coordenada):
         #Envia el string de la coordenada a la funcion disparar del objeto de clase Tablero en el modulo database y devuelve un booleano
-        bomba = tablero.disparar(coordenada) 
+        bomba = tablero.disparar(coordenada)
+        tableroApi =  "tablero_aliado" if tablero == "tablero1" else "tablero_enemigo"
+        cl.actualizarApi(coordenada,tableroApi)
         if bomba:
             juego.turtle.color("Red")
             juego.mover_a_casilla(coordenada)
