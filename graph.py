@@ -2,6 +2,7 @@ import tkinter as tk
 import database as db
 import helpers as hp
 import api as ap
+import client as cl
 
 class Juego:
     def __init__(self):
@@ -61,17 +62,24 @@ class Juego:
                 self.grid2.dibujar_cuadrado(25)
     
 
-        turn = 1
-        b1,b2 = 17,17
-        while b1>0 and b2>0:
-            print(f"{b1} {b2}")
-            if turn == 1:
-                    turn,b1 = hp.disparar(self.grid2,tablero2,turn,1,b1)
-                    
-            elif turn == 2:
-                    turn,b2 = hp.disparar(self.grid1,tablero1,turn,2,b2)
-            elif turn == 0:
-                pass
+        ap.tablero_aliado.turno = True
+
+        while ap.tablero_aliado.nb>0 and ap.tablero_enemigo.nb>0:
+            if ap.tablero_aliado.turno:
+                    turn = True
+                    while turn:
+                        turn,ap.tablero_aliado.nb = hp.disparar(self.grid2,tablero2,turn,1,ap.tablero_aliado.nb)
+                    ap.tablero_aliado.turno = not cl.obtener_turno(ap.tablero_aliado.nombre)
+                    ap.tablero_enemigo.turno = not cl.obtener_turno(ap.tablero_enemigo.nombre)
+                    cl.modificar_turnos(ap.tablero_enemigo.nombre,True)
+
+            elif ap.tablero_enemigo.turno:
+                    turn = True
+                    while turn:
+                        turn,ap.tablero_enemigo.nb = hp.disparar(self.grid1,tablero1,turn,2,ap.tablero_enemigo.nb)
+                    ap.tablero_aliado.turno = not cl.obtener_turno(ap.tablero_aliado.nombre)
+                    ap.tablero_enemigo.turno = not cl.obtener_turno(ap.tablero_enemigo.nombre)
+                    cl.modificar_turnos(ap.tablero_aliado.nombre,True)
 
         self.root.destroy()  # Cierra la ventana principal de Tkinter
 

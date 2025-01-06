@@ -4,8 +4,11 @@ from tkinter import simpledialog
 import turtle
 import re
 import client as cl
+import random
 
 patron = r"^[a-jA-J]([0-9])$"
+lNumeros = [str(x) for x in range(0, 10)]
+lLetras = ["a","b","c","d","e","f","g","h","i","j"]
 
 # noinspection PyUnresolvedReferences
 class CenterWidgetMixin:
@@ -253,14 +256,17 @@ class V_de_Casillas(tk.Toplevel, CenterWidgetMixin):
 
 
 def disparar(juego,tablero,turn,player,b):
-    coordenada = simpledialog.askstring(f"Disparar J{player}", "Ingrese una coordenada (A-J 0-9):")
+    if turn == 1:
+        coordenada = simpledialog.askstring(f"Disparar J{player}", "Ingrese una coordenada (A-J 0-9):                ")
+    else:
+        coordenada = f"{random.choice(lLetras)}{random.choice(lNumeros)}"
     if coordenada is None:
         messagebox.showwarning("Error", "No se ingreso valor")
-        return turn,b
+        return True,b
     elif coordenada.lower() and re.match(patron, coordenada):
         #Envia el string de la coordenada a la funcion disparar del objeto de clase Tablero en el modulo database y devuelve un booleano
         bomba = tablero.disparar(coordenada)
-        tableroApi =  "tablero_aliado" if tablero == "tablero1" else "tablero_enemigo"
+        tableroApi =  "tablero_aliado" if player == 2 else "tablero_enemigo"
         cl.actualizarApi(coordenada,tableroApi)
         if bomba:
             juego.turtle.color("Red")
@@ -268,28 +274,61 @@ def disparar(juego,tablero,turn,player,b):
             juego.dibujar_cuadrado(25)
             if b == 1:
                 messagebox.showinfo("GG!", f"Felicidades P{player}, haz destruido todos los barcos del enemigo")
-                return 0,0
+                return False,0
             else:
                 messagebox.showinfo("HIT!", "Haz dado en el blanco! Dispara de nuevo")
-            return turn,b-1
+                
+            return True,b-1
 
         elif bomba is None:
-            messagebox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
-            return turn,b
+            if turn == 1:
+                messagebox.showwarning("Error", "Ya se disparo en esa casilla, pruebe otra")
+            return True,b
 
         elif not bomba:
             juego.turtle.color("White")
             juego.mover_a_casilla(coordenada)
             juego.dibujar_cuadrado(25)
-            if player == 1:
-                return turn+1,b
-            
-            elif player == 2:
-                return turn-1,b
+            return False,b
 
     else:
         messagebox.showwarning("Error", "Coordenada Invalida")
         print("Coordenada inválida.")
         return turn,b
+
+def colocador_de_barcos(size):
+
+
+    if size<0 or size>4 :
+        print("Valor invalido, desde cuando un barco tiene estas casillas?")
+    
+    valid_group = False
+
+    while(not valid_group):
+
+        cInicio = f"{random.choice(lLetras)}{random.choice(lNumeros)}"
+
+        r = random.randint(1,2)
+
+        if(r == 1):
+            cFinal = f"{cInicio[0]}{random.choice(lNumeros)}"
+        else:
+            cFinal = f"{random.choice(lLetras)}{cInicio[1]}"
+
+        if cInicio[0] == cFinal[0] and cInicio[1] in lNumeros and cFinal[1] in lNumeros:
+            valid = int(cFinal[1]) - int(cInicio[1]) 
+
+            if valid == size:
+                for i in range(int(cInicio[1]), int(cFinal[1]) + 1):
+                    valid_group = True
+
+        elif cInicio[1] == cFinal[1] and cInicio[0] in lLetras and cFinal[0] in lLetras:
+            valid = ord(cFinal[0]) - ord(cInicio[0]) 
+
+            if valid == size:
+                for i in range(ord(cInicio[0]) , ord(cFinal[0]) + 1):
+                    valid_group = True
+
+    return cInicio,cFinal
 
 

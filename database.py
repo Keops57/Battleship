@@ -5,6 +5,7 @@ import helpers as hp
 import tkinter as tk
 import client as cl
 from tkinter import messagebox
+import random
 
 class Casilla:
     def __init__(self, coord,barco=False, hit=False):
@@ -30,6 +31,8 @@ class Tablero:
         self.archivo = f"{nombre}.csv"
         self.crear_tablero()  # Crear el tablero al inicializar
         self.root = tk.Tk()
+        self.turno = False
+        self.nb = 17
         self.root.withdraw()  # Oculta la ventana principal
 
     def crear_tablero(self):
@@ -170,7 +173,10 @@ class Tablero:
             
     def colocar_barcos_aleatorio(self):
         nb = 0
+        lNumeros = [str(x) for x in range(0, 10)]
+        lLetras = ["a","b","c","d","e","f","g","h","i","j"]
         while nb<5:
+            casillas_a_marcar = []
             if nb==0:
                 barco = "Destroyer (2)"
                 size = 1
@@ -187,33 +193,45 @@ class Tablero:
                 barco = "Carrier (5)"
                 size = 4
             
-            """Función para solicitar las coordenadas usando la ventana secundaria."""
-            app = hp.V_de_Casillas(self.root, "BattleShip", f"Ingrese las Coord de Inicio y Final del {barco}",size)
-            app.grab_set()  # Bloquea la interacción con otras ventanas hasta que se cierre esta
-            self.root.wait_window(app)  # Espera a que se cierre la ventana
+            cInicio, cFinal = hp.colocador_de_barcos(size)
 
-            if app.resultado == "y":
+            if cInicio[0] == cFinal[0]:
+                for i in range(int(cInicio[1]), int(cFinal[1]) + 1):
+                    casillas_a_marcar.append(f"{cInicio[0]}{i}")
+                    print("Coordenadas Validas")
+                    print(f"Coordenadas Actuales: {casillas_a_marcar}")
+                valid_group = True
+            
+            elif cInicio[1] == cFinal[1]:
+                for i in range(ord(cInicio[0]) , ord(cFinal[0]) + 1):
+                    casillas_a_marcar.append(f"{chr(i)}{cFinal[1]}")
+                    print("Coordenadas Validas")
+                    print(f"Coordenadas Actuales: {casillas_a_marcar}")
+                valid_group = True
+
+            if(valid_group):
                 valido = False
                 cont_casilla = 0
-                print(f"{app.cI} -> {app.cF}")
+                print(f"{cInicio} -> {cFinal}")
                 for casilla in self.casillas:
-                    if casilla.coord in app.casillas_a_marcar and not casilla.barco:
-                        casilla.barco = True
-                        cl.colocarBarcosApi(casilla.coord,self.nombre)
+                    if casilla.coord in casillas_a_marcar and not casilla.barco:
                         cont_casilla += 1
                         if cont_casilla == size+1:
                             valido = True
                             break
-                    elif casilla.coord in app.casillas_a_marcar and casilla.barco:
+                    elif casilla.coord in casillas_a_marcar and casilla.barco:
                         casilla_repetida = casilla.coord
                         valido = False
-                        messagebox.showerror("Error", f"La casilla {casilla_repetida} ya tiene un barco encima, coloque de nuevo el barco: ")
+                        print(f"La casilla {casilla_repetida} ya tiene un barco encima, coloque de nuevo el barco")
                         break
 
                 if valido:
+                    for casilla in self.casillas:
+                        if casilla.coord in casillas_a_marcar and not casilla.barco:
+                            casilla.barco = True
+                            cl.colocarBarcosApi(casilla.coord,self.nombre)
+                            cont_casilla += 1
+                            if cont_casilla == size+1:
+                                break
                     nb+=1
                     self.guardar()
-    
-            else:
-                print("El usuario canceló la entrada.")
-                return
